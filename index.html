@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room Kimia: Labirin Molekul</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Scholarly Neutrals -->
+    <!-- Application Structure Plan: A single-page, vertically scrolling app with four distinct sections representing the escape room levels. Each level is initially locked and can only be accessed by solving the puzzle of the preceding level. This linear, gated progression enhances the game-like experience and ensures a guided learning path. The structure is chosen to directly translate the source report's level-based format into an interactive and engaging user flow. -->
+    <!-- Visualization & Content Choices: Level 1 (Alkane Order): Goal is to teach alkane naming sequence. Using an interactive drag-and-drop list for sorting. Interaction reinforces memory through tactile engagement. Method: Vanilla JS. Level 2 (Branched Alkane): Goal is to teach main chain identification. Using a CSS-drawn molecule diagram and text inputs. Interaction tests specific knowledge. Method: HTML/CSS/JS. Level 3 (Alkenes): Goal is to teach alkene naming. Using text formulas and text inputs. Interaction requires active recall of naming rules. Method: Vanilla JS. Level 4 (Consolidation): Goal is to interpret a complex name. Using a CSS-drawn diagram and text inputs. Interaction tests comprehension of all combined rules. Method: HTML/CSS/JS. All diagrams are built with HTML/CSS to avoid SVG/images. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            background-color: #FDFBF5;
+            font-family: 'Inter', sans-serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        .level-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .level-lock {
+            filter: blur(4px);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .draggable {
+            cursor: move;
+            user-select: none;
+            border: 2px solid transparent;
+        }
+
+        .dragging {
+            opacity: 0.5;
+            background-color: #E0E7FF;
+            border-color: #4338CA;
+        }
+
+        .drop-zone {
+            min-height: 50px;
+            border: 2px dashed #D1D5DB;
+        }
+
+        .correct-answer {
+            border-color: #10B981 !important;
+            color: #059669;
+        }
+
+        .incorrect-answer {
+            border-color: #EF4444 !important;
+            color: #DC2626;
+        }
+
+        .atom {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bond {
+            display: inline-block;
+            height: 2px;
+            background-color: #374151;
+        }
+
+        .vertical-bond {
+            position: absolute;
+            width: 2px;
+            background-color: #374151;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-800">ESCAPE ROOM KIMIA</h1>
+            <p class="text-lg text-gray-600 mt-2">Pecahkan teka-teki untuk mengungkap senyawa misterius!</p>
+        </header>
+
+        <!-- Level 1 -->
+        <section id="level-1" class="level-card">
+            <h2 class="text-2xl font-bold mb-4">🧪 LEVEL 1: Kunci Dasar (Alkana Rantai Lurus)</h2>
+            <p class="mb-6 text-gray-600">Susunlah nama-nama alkana berikut dari jumlah atom C terkecil ke terbesar.
+                Huruf dalam kotak akan membentuk kata kunci.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div>
+                    <h3 class="font-semibold mb-2 text-center">Pilihan Nama (Seret)</h3>
+                    <div id="alkane-pool" class="p-4 bg-gray-50 rounded-lg space-y-2">
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Oktana">[O]
+                            Oktana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Metana">[M]
+                            Metana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Nonana">[N]
+                            Nonana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Etana">[E]
+                            Etana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Heptana">
+                            [K] Heptana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Dekana">[A]
+                            Dekana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Butana">[S]
+                            Butana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Propana">
+                            [U] Propana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Pentana">
+                            [I] Pentana</div>
+                        <div class="p-3 bg-white rounded-lg shadow-sm draggable" draggable="true" data-name="Heksana">
+                            [L] Heksana</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2 text-center">Urutan Benar (Letakkan di sini)</h3>
+                    <div id="alkane-dropzone" class="p-4 bg-gray-50 rounded-lg space-y-2 drop-zone"></div>
+                </div>
+            </div>
+
+            <div id="level-1-result" class="mt-6 text-center hidden">
+                <p class="text-lg">Kata Kunci yang terbentuk: <span id="keyword-1"
+                        class="font-bold text-2xl text-indigo-600 tracking-widest"></span></p>
+                <p class="mt-4 text-gray-600">Kunci untuk Level 2 adalah anagram dari kata di atas. Masukkan kuncinya!
+                </p>
+                <div class="flex justify-center mt-4">
+                    <input type="text" id="key-1-input"
+                        class="text-center text-lg p-2 border-2 border-gray-300 rounded-md w-64 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Masukkan Kunci">
+                    <button id="unlock-2-btn"
+                        class="ml-2 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition">Buka
+                        Level 2</button>
+                </div>
+                <p id="key-1-feedback" class="mt-2 text-red-500 text-sm h-5"></p>
+            </div>
+        </section>
+
+        <!-- Level 2 -->
+        <section id="level-2" class="level-card level-lock">
+            <h2 class="text-2xl font-bold mb-4">🧪 LEVEL 2: Cabang dan Penomoran</h2>
+            <p class="mb-6 text-gray-600">Perhatikan struktur di bawah dan jawab pertanyaan untuk mendapatkan kunci
+                berikutnya.</p>
+
+            <div class="bg-gray-50 p-6 rounded-lg text-center mb-6">
+                <p class="font-mono text-xl mb-4 text-red-600 line-through">2-etilbutana (SALAH)</p>
+                <div class="flex justify-center items-center font-mono text-lg">
+                    <div class="atom">CH₃</div>
+                    <div class="bond w-6"></div>
+                    <div class="relative atom">
+                        CH
+                        <div class="vertical-bond h-6 top-full left-1/2 -translate-x-1/2"></div>
+                        <div class="absolute top-full translate-y-6 left-1/2 -translate-x-1/2 atom">CH₃</div>
+                    </div>
+                    <div class="bond w-6"></div>
+                    <div class="atom">CH₂</div>
+                    <div class="bond w-6"></div>
+                    <div class="atom">CH₃</div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="q2-1" class="font-semibold block mb-1">1. Apa nama IUPAC yang benar?</label>
+                    <input type="text" id="q2-1" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="q2-2" class="font-semibold block mb-1">2. Mengapa nama "2-etilbutana" salah?</label>
+                    <input type="text" id="q2-2" class="w-full p-2 border border-gray-300 rounded-md"
+                        placeholder="Rantai utama...">
+                </div>
+                <div>
+                    <label for="q2-3" class="font-semibold block mb-1">3. Jumlah C pada rantai utama yang benar? (Kunci
+                        Pertama)</label>
+                    <input type="number" id="q2-3" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="q2-4" class="font-semibold block mb-1">4. Pada karbon keberapa cabang terikat? (Kunci
+                        Kedua)</label>
+                    <input type="number" id="q2-4" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+
+            <div class="text-center mt-6">
+                <button id="check-2-btn"
+                    class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition">Periksa
+                    Jawaban</button>
+            </div>
+
+            <div id="level-2-result" class="mt-6 text-center hidden">
+                <p class="text-lg">Kunci untuk Level 3: <span id="keyword-2"
+                        class="font-bold text-3xl text-indigo-600 tracking-widest"></span></p>
+                <button id="unlock-3-btn"
+                    class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition">Lanjut
+                    ke Level 3</button>
+            </div>
+        </section>
+
+        <!-- Level 3 -->
+        <section id="level-3" class="level-card level-lock">
+            <h2 class="text-2xl font-bold mb-4">🧪 LEVEL 3: Ikatan Rangkap (Alkena)</h2>
+            <p class="mb-6 text-gray-600">Tentukan nama IUPAC dari senyawa alkena berikut untuk mendapatkan kata kunci
+                akhir.</p>
+
+            <div class="space-y-6">
+                <div class="flex items-center">
+                    <p class="font-mono text-lg w-2/5">1. CH₂=CH-CH₂-CH₃</p>
+                    <input type="text" id="q3-1" class="w-3/5 p-2 border border-gray-300 rounded-md"
+                        placeholder="Nama IUPAC">
+                    <span class="font-bold text-2xl text-indigo-600 ml-4 hidden">[B]</span>
+                </div>
+                <div class="flex items-center">
+                    <p class="font-mono text-lg w-2/5">2. CH₃-CH=CH-CH₃</p>
+                    <input type="text" id="q3-2" class="w-3/5 p-2 border border-gray-300 rounded-md"
+                        placeholder="Nama IUPAC">
+                    <span class="font-bold text-2xl text-indigo-600 ml-4 hidden">[U]</span>
+                </div>
+                <div class="flex items-center">
+                    <p class="font-mono text-lg w-2/5">3. CH₂=C(CH₃)-CH₃</p>
+                    <input type="text" id="q3-3" class="w-3/5 p-2 border border-gray-300 rounded-md"
+                        placeholder="Nama IUPAC">
+                    <span class="font-bold text-2xl text-indigo-600 ml-4 hidden">[N]</span>
+                </div>
+            </div>
+
+            <div id="level-3-result" class="mt-6 text-center hidden">
+                <p class="text-lg">Kata Kunci Level 3: <span id="keyword-3"
+                        class="font-bold text-3xl text-indigo-600 tracking-widest"></span></p>
+                <button id="unlock-4-btn"
+                    class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition">Lanjut
+                    ke Level Final</button>
+            </div>
+        </section>
+
+        <!-- Level 4 -->
+        <section id="level-4" class="level-card level-lock">
+            <h2 class="text-2xl font-bold mb-4">🧪 LEVEL 4: Senyawa Final (Konsolidasi)</h2>
+            <p class="mb-6 text-gray-600">Gambarkan (dalam pikiran Anda) dan jawab pertanyaan tentang senyawa ini untuk
+                mendapatkan kode final!</p>
+
+            <div class="bg-gray-50 p-6 rounded-lg text-center mb-6">
+                <h3 class="text-2xl font-bold font-mono">5-etil-3-metil-2-heptena</h3>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="q4-1" class="font-semibold block mb-1">1. Berapa jumlah atom C rantai utama?</label>
+                    <input type="number" id="q4-1" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="q4-2" class="font-semibold block mb-1">2. Pada atom C keberapa ikatan rangkapnya
+                        dimulai?</label>
+                    <input type="number" id="q4-2" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="q4-3" class="font-semibold block mb-1">3. Berapa jumlah total atom C dalam
+                        senyawa?</label>
+                    <input type="number" id="q4-3" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="check-4-btn"
+                    class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition">Dapatkan
+                    Kode Final</button>
+            </div>
+        </section>
+
+        <!-- Success Modal -->
+        <div id="success-modal"
+            class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-8 text-center max-w-lg transform transition-all scale-95 opacity-0">
+                <h2 class="text-4xl font-bold text-green-600 mb-4">SELAMAT!</h2>
+                <p class="text-lg text-gray-700 mb-2">Anda telah berhasil keluar dari Labirin Molekul!</p>
+                <p class="text-gray-600">Kode Final Anda adalah:</p>
+                <p id="final-code" class="text-6xl font-bold text-indigo-800 my-6 tracking-widest"></p>
+                <button onclick="location.reload()"
+                    class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition">Main
+                    Lagi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const level1 = {
+                draggables: document.querySelectorAll('#alkane-pool .draggable'),
+                dropzone: document.getElementById('alkane-dropzone'),
+                pool: document.getElementById('alkane-pool'),
+                resultDiv: document.getElementById('level-1-result'),
+                keywordSpan: document.getElementById('keyword-1'),
+                keyInput: document.getElementById('key-1-input'),
+                keyFeedback: document.getElementById('key-1-feedback'),
+                unlockBtn: document.getElementById('unlock-2-btn'),
+                correctOrder: ["Metana", "Etana", "Propana", "Butana", "Pentana", "Heksana", "Heptana", "Oktana", "Nonana", "Dekana"],
+                keyword: "MEUSILKONA",
+                anagramKey: "SILAKAN"
+            };
+
+            const level2 = {
+                section: document.getElementById('level-2'),
+                inputs: {
+                    q1: document.getElementById('q2-1'),
+                    q2: document.getElementById('q2-2'),
+                    q3: document.getElementById('q2-3'),
+                    q4: document.getElementById('q2-4'),
+                },
+                answers: {
+                    q1: "2-metilbutana",
+                    q3: "4",
+                    q4: "2"
+                },
+                checkBtn: document.getElementById('check-2-btn'),
+                resultDiv: document.getElementById('level-2-result'),
+                keywordSpan: document.getElementById('keyword-2'),
+                unlockBtn: document.getElementById('unlock-3-btn'),
+                key: "42"
+            };
+
+            const level3 = {
+                section: document.getElementById('level-3'),
+                inputs: {
+                    q1: document.getElementById('q3-1'),
+                    q2: document.getElementById('q3-2'),
+                    q3: document.getElementById('q3-3'),
+                },
+                answers: {
+                    q1: "1-butena",
+                    q2: "2-butena",
+                    q3: "2-metilpropena"
+                },
+                resultDiv: document.getElementById('level-3-result'),
+                keywordSpan: document.getElementById('keyword-3'),
+                unlockBtn: document.getElementById('unlock-4-btn'),
+                keyword: "BUN"
+            };
+
+            const level4 = {
+                section: document.getElementById('level-4'),
+                inputs: {
+                    q1: document.getElementById('q4-1'),
+                    q2: document.getElementById('q4-2'),
+                    q3: document.getElementById('q4-3'),
+                },
+                answers: {
+                    q1: "7",
+                    q2: "2",
+                    q3: "10"
+                },
+                checkBtn: document.getElementById('check-4-btn'),
+                finalCode: "7210"
+            };
+
+            const successModal = document.getElementById('success-modal');
+
+            function setupLevel1() {
+                level1.draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', () => {
+                        draggable.classList.add('dragging');
+                    });
+                    draggable.addEventListener('dragend', () => {
+                        draggable.classList.remove('dragging');
+                        checkLevel1Order();
+                    });
+                });
+
+                [level1.dropzone, level1.pool].forEach(zone => {
+                    zone.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        const afterElement = getDragAfterElement(zone, e.clientY);
+                        const draggable = document.querySelector('.dragging');
+                        if (afterElement == null) {
+                            zone.appendChild(draggable);
+                        } else {
+                            zone.insertBefore(draggable, afterElement);
+                        }
+                    });
+                });
+
+                level1.unlockBtn.addEventListener('click', () => {
+                    if (level1.keyInput.value.trim().toUpperCase() === level1.anagramKey) {
+                        level1.keyFeedback.textContent = '';
+                        level1.keyInput.classList.remove('incorrect-answer');
+                        level1.keyInput.classList.add('correct-answer');
+                        unlockLevel(level2.section);
+                    } else {
+                        level1.keyFeedback.textContent = 'Kunci salah, coba lagi!';
+                        level1.keyInput.classList.add('incorrect-answer');
+                    }
+                });
+            }
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            function checkLevel1Order() {
+                const currentOrder = [...level1.dropzone.querySelectorAll('.draggable')].map(el => el.dataset.name);
+                if (currentOrder.length === level1.correctOrder.length) {
+                    const isCorrect = currentOrder.every((item, index) => item === level1.correctOrder[index]);
+                    if (isCorrect) {
+                        level1.keywordSpan.textContent = level1.keyword;
+                        level1.resultDiv.classList.remove('hidden');
+                        level1.dropzone.classList.add('correct-answer');
+                    }
+                }
+            }
+
+            function setupLevel2() {
+                level2.checkBtn.addEventListener('click', () => {
+                    let allCorrect = true;
+                    Object.keys(level2.inputs).forEach(key => {
+                        const input = level2.inputs[key];
+                        const answer = level2.answers[key];
+                        // Normalize answer for comparison where needed
+                        const normalizedInput = input.value.trim().toLowerCase().replace(/\s|-/g, '');
+
+                        if (answer && normalizedInput !== answer.replace(/\s|-/g, '')) {
+                            input.classList.remove('correct-answer');
+                            input.classList.add('incorrect-answer');
+                            allCorrect = false;
+                        } else if (answer) {
+                            input.classList.remove('incorrect-answer');
+                            input.classList.add('correct-answer');
+                        } else {
+                            // For qualitative answer, just mark as correct if filled
+                            if (input.value.trim() !== '') {
+                                input.classList.remove('incorrect-answer');
+                                input.classList.add('correct-answer');
+                            } else {
+                                input.classList.add('incorrect-answer');
+                                allCorrect = false;
+                            }
+                        }
+                    });
+
+                    if (allCorrect) {
+                        level2.keywordSpan.textContent = level2.key;
+                        level2.resultDiv.classList.remove('hidden');
+                    }
+                });
+
+                level2.unlockBtn.addEventListener('click', () => unlockLevel(level3.section));
+            }
+
+            function setupLevel3() {
+                const inputs = Object.values(level3.inputs);
+                inputs.forEach(input => {
+                    input.addEventListener('input', checkLevel3Answers);
+                });
+            }
+
+            function checkLevel3Answers() {
+                let allCorrect = true;
+                Object.keys(level3.inputs).forEach(key => {
+                    const input = level3.inputs[key];
+                    const answer = level3.answers[key];
+                    const normalizedInput = input.value.trim().toLowerCase().replace(/\s|-/g, '');
+                    if (normalizedInput === answer.replace(/\s|-/g, '')) {
+                        input.classList.remove('incorrect-answer');
+                        input.classList.add('correct-answer');
+                        input.nextElementSibling.classList.remove('hidden');
+                    } else {
+                        input.classList.remove('correct-answer');
+                        input.nextElementSibling.classList.add('hidden');
+                        allCorrect = false;
+                    }
+                });
+
+                if (allCorrect) {
+                    level3.keywordSpan.textContent = level3.keyword;
+                    level3.resultDiv.classList.remove('hidden');
+                    level3.unlockBtn.addEventListener('click', () => unlockLevel(level4.section));
+                } else {
+                    level3.resultDiv.classList.add('hidden');
+                }
+            }
+
+            function setupLevel4() {
+                level4.checkBtn.addEventListener('click', () => {
+                    let allCorrect = true;
+                    Object.keys(level4.inputs).forEach(key => {
+                        const input = level4.inputs[key];
+                        const answer = level4.answers[key];
+                        if (input.value.trim() !== answer) {
+                            input.classList.remove('correct-answer');
+                            input.classList.add('incorrect-answer');
+                            allCorrect = false;
+                        } else {
+                            input.classList.remove('incorrect-answer');
+                            input.classList.add('correct-answer');
+                        }
+                    });
+
+                    if (allCorrect) {
+                        document.getElementById('final-code').textContent = level4.finalCode;
+                        successModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            successModal.querySelector('div').classList.remove('scale-95', 'opacity-0');
+                        }, 10);
+                    }
+                });
+            }
+
+            function unlockLevel(levelSection) {
+                levelSection.classList.remove('level-lock');
+                levelSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            setupLevel1();
+            setupLevel2();
+            setupLevel3();
+            setupLevel4();
+        });
+    </script>
+</body>
+
+</html>
